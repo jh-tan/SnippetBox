@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	_ "fmt"
 	"strings"
 	"time"
 
@@ -71,7 +70,7 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 		}
 	}
 
-  err = bcrypt.CompareHashAndPassword(hashed_password, []byte(password))
+	err = bcrypt.CompareHashAndPassword(hashed_password, []byte(password))
 	if err != nil {
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return 0, ErrInvalidCredentials
@@ -84,5 +83,9 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 }
 
 func (m *UserModel) Exists(id int) (bool, error) {
-	return false, nil
+	var exist bool
+	stmt := "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)"
+
+	err := m.DB.QueryRow(m.CONTEXT, stmt, id).Scan(&exist)
+  return exist, err
 }
